@@ -1,108 +1,78 @@
 #include "CodeEditor.h"
-#include <QTextBlock>
-#include <QColor>
-#include <QFont>
+#include <QFontMetrics>
+#include <QTextOption>
 
 CodeEditor::CodeEditor(QWidget *parent)
-    : QPlainTextEdit(parent), lineNumberArea(new LineNumberArea(this))
+    : QPlainTextEdit(parent)
 {
-    connect(this, &CodeEditor::blockCountChanged, this, &CodeEditor::updateLineNumberAreaWidth);
-    connect(this, &CodeEditor::updateRequest, this, &CodeEditor::updateLineNumberArea);
-    connect(this, &CodeEditor::cursorPositionChanged, this, &CodeEditor::highlightCurrentLine);
+    // default monospace font
+    QFont f("Courier New", 12);
+    setEditorFont(f);
 
-    updateLineNumberAreaWidth(0);
-    highlightCurrentLine();
+    // default tab stop
+    QFontMetrics metrics(font());
+    setTabStopDistance(m_tabSpaces * metrics.horizontalAdvance(' '));
 
-    setFont(QFont("Monospace", 11));
-
-    // 🚨 Removed: any Highlighter setup
+    setWordWrapMode(QTextOption::NoWrap);
+    setCursorWidth(2);
 }
 
-void CodeEditor::setDarkMode(bool enabled)
-{
-    m_darkMode = enabled;
-    // TODO: Apply dark/light palette if desired
+void CodeEditor::setEditorFont(const QFont &font) {
+    QFont f = font;
+    setFont(f);
+    QFontMetrics metrics(f);
+    setTabStopDistance(m_tabSpaces * metrics.horizontalAdvance(' '));
 }
 
-void CodeEditor::setTabSpaces(int spaces)
-{
-    m_tabSpaces = spaces;
+void CodeEditor::setEditorColors(const QColor &fontColor, const QColor &bgColor, bool darkMode, const QString &theme) {
+    QPalette p = palette();
+    p.setColor(QPalette::Text, fontColor);
+    p.setColor(QPalette::WindowText, fontColor);
+    p.setColor(QPalette::Base, bgColor);
+    p.setColor(QPalette::Window, bgColor);
+
+    QColor selBg, selText;
+    if (theme == "Light") {
+        selBg = QColor("#FFB347");   // amber
+        selText = Qt::black;
+    } else if (theme == "Dark (Classic)") {
+        selBg = QColor("#3A6EA5");   // mid-blue
+        selText = Qt::white;
+    } else if (theme == "Dark (Blue)") {
+        selBg = QColor("#8000FF");   // bright violet/magenta
+        selText = Qt::white;
+    } else {
+        // fallback: just contrast with background
+        selBg = darkMode ? fontColor.darker(200) : fontColor.lighter(150);
+        selText = darkMode ? Qt::white : Qt::black;
+    }
+
+    p.setColor(QPalette::Highlight, selBg);
+    p.setColor(QPalette::HighlightedText, selText);
+
+    setPalette(p);
+
+    // stylesheet: caret = font color, selection = highlight
+    setStyleSheet(QString(
+        "QPlainTextEdit { "
+        "color: %1; "
+        "background-color: %2; "
+        "selection-background-color: %3; "
+        "selection-color: %4; }"
+    ).arg(fontColor.name(), bgColor.name(), selBg.name(), selText.name()));
+}
+
+
+void CodeEditor::setTabSpaces(int spaces) {
+    m_tabSpaces = qMax(1, spaces);
     QFontMetrics metrics(font());
     setTabStopDistance(m_tabSpaces * metrics.horizontalAdvance(' '));
 }
 
-void CodeEditor::triggerBracketHighlight()
-{
-    // TODO: implement bracket matching later
-}
-
-int CodeEditor::lineNumberAreaWidth() {
-    int digits = 1;
-    int max = qMax(1, blockCount());
-    while (max >= 10) {
-        max /= 10;
-        ++digits;
-    }
-    int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
-    return space;
-}
-
-void CodeEditor::updateLineNumberAreaWidth(int) {
-    setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
-}
-
-void CodeEditor::updateLineNumberArea(const QRect &rect, int dy) {
-    if (dy)
-        lineNumberArea->scroll(0, dy);
-    else
-        lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
-
-    if (rect.contains(viewport()->rect()))
-        updateLineNumberAreaWidth(0);
-}
-
-void CodeEditor::resizeEvent(QResizeEvent *e) {
-    QPlainTextEdit::resizeEvent(e);
-    QRect cr = contentsRect();
-    lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
-}
-
-void CodeEditor::highlightCurrentLine() {
-    QList<QTextEdit::ExtraSelection> extraSelections;
-
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelections.append(selection);
-    }
-
-    setExtraSelections(extraSelections);
-}
-
-void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
-    QPainter painter(lineNumberArea);
-    painter.fillRect(event->rect(), Qt::lightGray);
-
-    QTextBlock block = firstVisibleBlock();
-    int blockNumber = block.blockNumber();
-    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
-    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
-
-    while (block.isValid() && top <= event->rect().bottom()) {
-        if (block.isVisible() && bottom >= event->rect().top()) {
-            QString number = QString::number(blockNumber + 1);
-            painter.setPen(Qt::black);
-            painter.drawText(0, top, lineNumberArea->width() - 2, fontMetrics().height(),
-                             Qt::AlignRight, number);
-        }
-
-        block = block.next();
-        top = bottom;
-        bottom = top + static_cast<int>(blockBoundingRect(block).height());
-        ++blockNumber;
-    }
+void CodeEditor::setCaretColor(const QColor &color) {
+    // caret already matches text color through setEditorColors
+    QPalette p = palette();
+    p.setColor(QPalette::Text, color);
+    p.setColor(QPalette::WindowText, color);
+    setPalette(p);
 }

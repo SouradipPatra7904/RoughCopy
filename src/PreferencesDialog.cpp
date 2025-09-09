@@ -1,72 +1,141 @@
 #include "PreferencesDialog.h"
+#include <QComboBox>
+#include <QSpinBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QFontDatabase>
 
-PreferencesDialog::PreferencesDialog(QWidget* parent)
+// -------------------------
+// Constructor
+// -------------------------
+PreferencesDialog::PreferencesDialog(QWidget *parent)
     : QDialog(parent)
 {
     setupUI();
-    connectSignals();
-
-    // Save initial state
-    m_prevDarkMode = isDarkMode();
-    m_prevTabSpaces = tabSpaces();
-    m_prevFont = selectedFont();
+    loadDefaults();
+    loadCurrent();
 }
 
-void PreferencesDialog::setupUI()
-{
-    m_darkModeCheck = new QCheckBox("Dark Mode");
-    m_tabSpacesSpin = new QSpinBox();
-    m_tabSpacesSpin->setRange(1, 8);
-    m_fontCombo = new QFontComboBox();
+// -------------------------
+// Setup UI
+// -------------------------
+void PreferencesDialog::setupUI() {
+    setWindowTitle("Preferences");
+    QVBoxLayout *main = new QVBoxLayout(this);
 
-    m_okButton = new QPushButton("OK");
-    m_cancelButton = new QPushButton("Cancel");
+    // Font family + size
+    QHBoxLayout *fontRow = new QHBoxLayout();
+    fontRow->addWidget(new QLabel("Font:"));
+    fontCombo = new QComboBox(this);
+    fontCombo->addItems(QFontDatabase().families());
+    fontRow->addWidget(fontCombo);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(m_darkModeCheck);
-    mainLayout->addWidget(m_tabSpacesSpin);
-    mainLayout->addWidget(m_fontCombo);
+    fontRow->addWidget(new QLabel("Size:"));
+    fontSizeSpin = new QSpinBox(this);
+    fontSizeSpin->setRange(8, 48);
+    fontSizeSpin->setValue(12);
+    fontRow->addWidget(fontSizeSpin);
+    main->addLayout(fontRow);
 
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
-    buttonLayout->addWidget(m_okButton);
-    buttonLayout->addWidget(m_cancelButton);
+    // Theme
+    QHBoxLayout *themeRow = new QHBoxLayout();
+    themeRow->addWidget(new QLabel("Theme:"));
+    themeCombo = new QComboBox(this);
+    themeCombo->addItems({"Light", "Dark (Classic)", "Dark (Blue)"});
+    themeRow->addWidget(themeCombo);
+    main->addLayout(themeRow);
 
-    mainLayout->addLayout(buttonLayout);
+    // Buttons
+    QHBoxLayout *btnRow = new QHBoxLayout();
+    applyBtn = new QPushButton("Apply", this);
+    okBtn = new QPushButton("OK", this);
+    cancelBtn = new QPushButton("Cancel", this);
+    restoreBtn = new QPushButton("Restore Defaults", this);
+    btnRow->addStretch();
+    btnRow->addWidget(applyBtn);
+    btnRow->addWidget(okBtn);
+    btnRow->addWidget(cancelBtn);
+    btnRow->addWidget(restoreBtn);
+    main->addLayout(btnRow);
+
+    // Connections
+    connect(applyBtn, &QPushButton::clicked, this, &PreferencesDialog::onApply);
+    connect(okBtn, &QPushButton::clicked, this, &PreferencesDialog::onOk);
+    connect(cancelBtn, &QPushButton::clicked, this, &PreferencesDialog::onCancel);
+    connect(restoreBtn, &QPushButton::clicked, this, &PreferencesDialog::onRestoreDefaults);
+
+    // live preview
+    connect(fontCombo, &QComboBox::currentTextChanged, this, &PreferencesDialog::previewChanges);
+    connect(fontSizeSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PreferencesDialog::previewChanges);
+    connect(themeCombo, &QComboBox::currentTextChanged, this, &PreferencesDialog::onThemeChanged);
 }
 
-void PreferencesDialog::connectSignals()
-{
-    connect(m_darkModeCheck, &QCheckBox::toggled, [this](bool checked){
-        emit preferencesReverted(); // Instant preview handled externally
-    });
-
-    connect(m_tabSpacesSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int){
-        emit preferencesReverted(); // Instant preview handled externally
-    });
-
-    connect(m_fontCombo, &QFontComboBox::currentFontChanged, [this](const QFont&){
-        emit preferencesReverted(); // Instant preview handled externally
-    });
-
-    connect(m_okButton, &QPushButton::clicked, this, &QDialog::accept);
-    connect(m_cancelButton, &QPushButton::clicked, [this](){
-        // Revert state
-        setDarkMode(m_prevDarkMode);
-        setTabSpaces(m_prevTabSpaces);
-        setSelectedFont(m_prevFont);
-        emit preferencesReverted();
-        reject();
-    });
+// -------------------------
+// Defaults
+// -------------------------
+void PreferencesDialog::loadDefaults() {
+    defaultFont = QFont("Courier New", 12);
+    defaultTheme = "Light";
 }
 
-// Getters/Setters
-bool PreferencesDialog::isDarkMode() const { return m_darkModeCheck->isChecked(); }
-void PreferencesDialog::setDarkMode(bool enabled) { m_darkModeCheck->setChecked(enabled); }
+// -------------------------
+// Load Current
+// -------------------------
+void PreferencesDialog::loadCurrent() {
+    currentFont = defaultFont;
+    currentTheme = defaultTheme;
 
-int PreferencesDialog::tabSpaces() const { return m_tabSpacesSpin->value(); }
-void PreferencesDialog::setTabSpaces(int spaces) { m_tabSpacesSpin->setValue(spaces); }
+    fontCombo->setCurrentText(currentFont.family());
+    fontSizeSpin->setValue(currentFont.pointSize());
+    themeCombo->setCurrentText(currentTheme);
 
-QFont PreferencesDialog::selectedFont() const { return m_fontCombo->currentFont(); }
-void PreferencesDialog::setSelectedFont(const QFont& font) { m_fontCombo->setCurrentFont(font); }
+    onThemeChanged(currentTheme);
+}
+
+// -------------------------
+// Accessors
+// -------------------------
+QFont PreferencesDialog::getSelectedFont() const {
+    return QFont(fontCombo->currentText(), fontSizeSpin->value());
+}
+
+QString PreferencesDialog::getTheme() const {
+    return themeCombo->currentText();
+}
+
+// -------------------------
+// Slots
+// -------------------------
+void PreferencesDialog::onApply() {
+    emit preferencesApplied(getSelectedFont(), Qt::black, Qt::white, getTheme());
+}
+
+void PreferencesDialog::onRestoreDefaults() {
+    loadDefaults();
+    loadCurrent();
+    emit preferencesReverted();
+}
+
+void PreferencesDialog::onOk() {
+    emit preferencesApplied(getSelectedFont(), Qt::black, Qt::white, getTheme());
+    accept();
+}
+
+void PreferencesDialog::onCancel() {
+    emit preferencesReverted();
+    reject();
+}
+
+void PreferencesDialog::previewChanges() {
+    emit preferencesApplied(getSelectedFont(), Qt::black, Qt::white, getTheme());
+}
+
+// -------------------------
+// Theme-specific behavior
+// -------------------------
+void PreferencesDialog::onThemeChanged(const QString &theme) {
+    currentTheme = theme;
+    previewChanges();
+}

@@ -1,44 +1,55 @@
-#pragma once
+#ifndef PREFERENCESDIALOG_H
+#define PREFERENCESDIALOG_H
+
 #include <QDialog>
 #include <QFont>
-#include <QCheckBox>
-#include <QSpinBox>
-#include <QFontComboBox>
-#include <QPushButton>
+#include <QString>
 
-class PreferencesDialog : public QDialog
-{
+class QComboBox;
+class QSpinBox;
+class QPushButton;
+
+class PreferencesDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit PreferencesDialog(QWidget* parent = nullptr);
+    explicit PreferencesDialog(QWidget *parent = nullptr);
 
-    bool isDarkMode() const;
-    void setDarkMode(bool enabled);
-
-    int tabSpaces() const;
-    void setTabSpaces(int spaces);
-
-    QFont selectedFont() const;
-    void setSelectedFont(const QFont& font);
+    QFont getSelectedFont() const;
+    QString getTheme() const;
 
 signals:
+    void preferencesApplied(const QFont &font, const QColor &fontColor, const QColor &bgColor, const QString &theme);
     void preferencesReverted();
+
+private slots:
+    void onApply();
+    void onRestoreDefaults();
+    void onOk();
+    void onCancel();
+    void previewChanges();
+    void onThemeChanged(const QString &theme);
 
 private:
     void setupUI();
-    void connectSignals();
+    void loadDefaults();
+    void loadCurrent();
 
-private:
-    QCheckBox* m_darkModeCheck;
-    QSpinBox* m_tabSpacesSpin;
-    QFontComboBox* m_fontCombo;
+    // UI widgets
+    QComboBox *fontCombo;
+    QSpinBox *fontSizeSpin;
+    QComboBox *themeCombo;
+    QPushButton *applyBtn;
+    QPushButton *okBtn;
+    QPushButton *cancelBtn;
+    QPushButton *restoreBtn;
 
-    QPushButton* m_okButton;
-    QPushButton* m_cancelButton;
+    // State
+    QFont currentFont;
+    QString currentTheme;
 
-    // Saved state for revert
-    bool m_prevDarkMode;
-    int m_prevTabSpaces;
-    QFont m_prevFont;
+    QFont defaultFont;
+    QString defaultTheme;
 };
+
+#endif // PREFERENCESDIALOG_H

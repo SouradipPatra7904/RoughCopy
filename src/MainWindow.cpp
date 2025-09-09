@@ -1,25 +1,30 @@
 #include "MainWindow.h"
-#include "CodeEditor.h"
+#include "TextEditor.h"
+#include "PreferencesDialog.h"
 #include "SearchReplaceDialog.h"
 
+#include <QPlainTextEdit>
 #include <QMenuBar>
 #include <QMenu>
 #include <QAction>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QTextStream>
-#include <QTextDocument>
-#include <QTextCursor>
+#include <QMessageBox>
+#include <QVBoxLayout>
+#include <QTextEdit>
+#include <QDialog>
 
+// --------------------------------
+// Constructor
+// --------------------------------
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), m_searchDialog(nullptr)
 {
-    editor = new CodeEditor(this);
-    setCentralWidget(editor);
+    m_textEditor = new TextEditor(this);
+    setCentralWidget(m_textEditor);
 
-    // ---- FILE Menu ----
+    // File menu
     QMenu *fileMenu = menuBar()->addMenu("&File");
-
     QAction *newAct = new QAction("&New", this);
     QAction *openAct = new QAction("&Open...", this);
     QAction *saveAct = new QAction("&Save", this);
@@ -32,112 +37,173 @@ MainWindow::MainWindow(QWidget *parent)
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);
 
-    // ---- EDIT Menu ----
+    // Edit menu
     QMenu *editMenu = menuBar()->addMenu("&Edit");
 
-    QAction *searchReplaceAct = new QAction("Search/Replace", this);
-    connect(searchReplaceAct, &QAction::triggered, this, &MainWindow::openSearchReplaceDialog);
-    editMenu->addAction(searchReplaceAct);
-
-    // ---- VIEW Menu ----
+    // View menu
     QMenu *viewMenu = menuBar()->addMenu("&View");
+    QAction *prefAct = viewMenu->addAction("&Preferences");
+    connect(prefAct, &QAction::triggered, this, &MainWindow::openPreferences);
 
-    QAction *preferencesAct = new QAction("&Preferences", this);
-    connect(preferencesAct, &QAction::triggered, this, &MainWindow::openPreferences);
-    viewMenu->addAction(preferencesAct);
+    // Find / Replace
+    QAction *findReplaceAct = editMenu->addAction("&Find/Replace");
+    connect(findReplaceAct, &QAction::triggered, this, &MainWindow::openFindReplace);
+
+    // Help menu
+    QMenu *helpMenu = menuBar()->addMenu("&Help");
+    QAction *manAct = helpMenu->addAction("&Man Page");
+    connect(manAct, &QAction::triggered, this, &MainWindow::openManPage);
+
+    // Default theme
+    m_currentTheme = "Light";
 }
 
-// ---------------- FILE ----------------
+// --------------------------------
+// Manual Page
+// --------------------------------
+void MainWindow::openManPage() {
+    QString text;
+    text += "RoughCopy - Minimalist Editor\n\n";
+    text += "USAGE:\n";
+    text += "  - File > Open : Open a file\n";
+    text += "  - File > Save : Save current file\n";
+    text += "  - View > Preferences : Change theme, font, colors\n";
+    text += "  - View > Find/Replace : Search and replace text\n";
+    text += "  - Help > Man Page : Show this help\n";
 
+    QTextEdit *helpView = new QTextEdit;
+    helpView->setReadOnly(true);
+    helpView->setText(text);
+
+    if (m_currentTheme == "Light") {
+        helpView->setStyleSheet("QTextEdit { background: #ffe4c4; color: #000000; }");
+    }
+    else if (m_currentTheme == "Dark (Classic)") {
+        helpView->setStyleSheet("QTextEdit { background: #000000; color: #ffe4c4; }");
+    }
+    else if (m_currentTheme == "Dark (Blue)") {
+        helpView->setStyleSheet("QTextEdit { background: #001e42; color: #00f0ff; }");
+    }
+
+    QDialog dlg(this);
+    dlg.setWindowTitle("Man Page");
+    QVBoxLayout layout;
+    layout.addWidget(helpView);
+    dlg.setLayout(&layout);
+    dlg.resize(500, 400);
+    dlg.exec();
+}
+
+// --------------------------------
+// File actions
+// --------------------------------
 void MainWindow::newFile() {
-    editor->clear();
+    TextEditor *te = qobject_cast<TextEditor*>(centralWidget());
+    if (te) te->clearEditor();
     currentFile.clear();
 }
 
 void MainWindow::openFile() {
     QString fileName = QFileDialog::getOpenFileName(this, "Open File");
-    if (!fileName.isEmpty()) {
-        QFile file(fileName);
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QTextStream in(&file);
-            editor->setPlainText(in.readAll());
-            currentFile = fileName;
-        } else {
-            QMessageBox::warning(this, "Error", "Cannot open file.");
-        }
+    if (fileName.isEmpty()) return;
+
+    QFile f(fileName);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Error", "Cannot open file: " + f.errorString());
+        return;
     }
+
+    QTextStream in(&f);
+    QString content = in.readAll();
+    f.close();
+
+    TextEditor *te = qobject_cast<TextEditor*>(centralWidget());
+    if (te) te->setEditorText(content);
+
+    currentFile = fileName;
 }
 
 void MainWindow::saveFile() {
     QString fileName = currentFile;
     if (fileName.isEmpty()) {
-        fileName = QFileDialog::getSaveFileName(this, "Save File");
-        if (fileName.isEmpty())
-            return;
+        fileName = QFileDialog::getSaveFileName(this, "Save File As");
+        if (fileName.isEmpty()) return;
         currentFile = fileName;
     }
 
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << editor->toPlainText();
-    } else {
-        QMessageBox::warning(this, "Error", "Cannot save file.");
+    TextEditor *te = qobject_cast<TextEditor*>(centralWidget());
+    if (!te) return;
+
+    QFile f(fileName);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Error", "Cannot save file: " + f.errorString());
+        return;
     }
+
+    QTextStream out(&f);
+    out << te->editorText();
+    f.close();
 }
 
-// ---------------- VIEW ----------------
-
+// --------------------------------
+// Preferences
+// --------------------------------
 void MainWindow::openPreferences() {
-    QMessageBox::information(this, "Preferences", "Preferences dialog placeholder.");
+    PreferencesDialog pref(this);
+
+    connect(&pref, &PreferencesDialog::preferencesApplied,
+            this, [this](const QFont &font, const QColor &fontColor, const QColor &bgColor, const QString &theme) {
+        TextEditor *te = qobject_cast<TextEditor*>(centralWidget());
+        if (te) te->applyPreferences(font, fontColor, bgColor, theme);
+        m_currentTheme = theme;
+    });
+
+    pref.exec();
 }
 
-// ---------------- SEARCH/REPLACE ----------------
+// --------------------------------
+// Find / Replace
+// --------------------------------
+void MainWindow::openFindReplace() {
+    if (!m_searchDialog) {
+        m_searchDialog = new SearchReplaceDialog(this);
+        auto editor = centralWidget()->findChild<QPlainTextEdit*>();
 
-void MainWindow::openSearchReplaceDialog() {
-    SearchReplaceDialog dialog(this);
-
-    // Find Next
-    connect(&dialog, &SearchReplaceDialog::findNext,
-            this, [this](const QString &text, bool caseSensitive) {
-                QTextDocument::FindFlags flags;
-                if (caseSensitive)
-                    flags |= QTextDocument::FindCaseSensitively;
-
-                if (!editor->find(text, flags)) {
-                    QMessageBox::information(this, "Find", "No more matches found.");
-                }
-            });
-
-    // Replace current
-    connect(&dialog, &SearchReplaceDialog::replace,
-            this, [this](const QString &text, const QString &replacement, bool caseSensitive) {
-                QTextCursor cursor = editor->textCursor();
-
-                if (cursor.hasSelection() && cursor.selectedText() == text) {
-                    cursor.insertText(replacement);
-                }
-
-                QTextDocument::FindFlags flags;
-                if (caseSensitive)
-                    flags |= QTextDocument::FindCaseSensitively;
-
-                editor->find(text, flags);
-            });
-
-    // Replace all
-    connect(&dialog, &SearchReplaceDialog::replaceAll,
-            this, [this](const QString &text, const QString &replacement, bool caseSensitive) {
+        connect(m_searchDialog, &SearchReplaceDialog::findNext,
+                [editor](const QString &text, bool caseSensitive) {
+            if (!editor) return;
+            QTextDocument::FindFlags flags;
+            if (caseSensitive) flags |= QTextDocument::FindCaseSensitively;
+            if (!editor->find(text, flags)) {
                 editor->moveCursor(QTextCursor::Start);
-                QTextDocument::FindFlags flags;
-                if (caseSensitive)
-                    flags |= QTextDocument::FindCaseSensitively;
-
-                while (editor->find(text, flags)) {
-                    QTextCursor cursor = editor->textCursor();
-                    cursor.insertText(replacement);
+                if (!editor->find(text, flags)) {
+                    QMessageBox::information(editor, "Find", "No more matches found.");
                 }
-            });
+            }
+        });
 
-    dialog.exec();
+        connect(m_searchDialog, &SearchReplaceDialog::replace,
+                [editor](const QString &text, const QString &replacement, bool caseSensitive) {
+            if (!editor) return;
+            QTextCursor cursor = editor->textCursor();
+            if (cursor.hasSelection() && cursor.selectedText() == text) {
+                cursor.insertText(replacement);
+            }
+        });
+
+        connect(m_searchDialog, &SearchReplaceDialog::replaceAll,
+                [editor](const QString &text, const QString &replacement, bool caseSensitive) {
+            if (!editor) return;
+            QTextDocument::FindFlags flags;
+            if (caseSensitive) flags |= QTextDocument::FindCaseSensitively;
+            editor->moveCursor(QTextCursor::Start);
+            while (editor->find(text, flags)) {
+                QTextCursor cursor = editor->textCursor();
+                cursor.insertText(replacement);
+            }
+        });
+    }
+    m_searchDialog->show();
+    m_searchDialog->raise();
+    m_searchDialog->activateWindow();
 }
