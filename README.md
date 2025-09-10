@@ -23,7 +23,7 @@
 
 ## 📦 Installation
 
-    1. From `.deb` package
+    1. From `.deb` package (downloadable from the Releases section) :
         [bash]
             $ sudo dpkg -i roughcopy_1.0-1_amd64.deb
             $ sudo apt-get -f install   # to fix missing dependencies if any
