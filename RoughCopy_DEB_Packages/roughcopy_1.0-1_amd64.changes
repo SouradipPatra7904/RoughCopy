@@ -1,0 +1,29 @@
+Format: 1.8
+Date: Wed, 10 Sep 2025 15:00:00 +0530
+Source: roughcopy
+Binary: roughcopy
+Built-For-Profiles: noudeb
+Architecture: amd64
+Version: 1.0-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Souradip Patra <your@email.com>
+Changed-By: Souradip Patra <spectralphoenix.dev@gmail.com>
+Description:
+ roughcopy  - RoughCopy - a C++ & Qt6-based text editor
+Changes:
+ roughcopy (1.0-1) unstable; urgency=medium
+ .
+   * Initial release
+Checksums-Sha1:
+ 98ec816b85e5a036da70355388ac2cc1d4a77fcd 19770 roughcopy-dbgsym_1.0-1_amd64.ddeb
+ 4c9b23e40c3e91d0e8a7104fd3a5d23e1b9831c5 11171 roughcopy_1.0-1_amd64.buildinfo
+ 1f25dfe27e5978a2a20697820c4a6e8306d77198 69092 roughcopy_1.0-1_amd64.deb
+Checksums-Sha256:
+ 6750b4a5a2a4f7edb01de85b6c2d6fe54bdaf9bd5260484f10e1339cf3357a30 19770 roughcopy-dbgsym_1.0-1_amd64.ddeb
+ 0e444270a545ea349cab11d54c4845f991805e9783681d6acc103f9d634b0a59 11171 roughcopy_1.0-1_amd64.buildinfo
+ cf1e0ff5ce0b14c0e08f1ebec17b2e94baaab536fff98cab71007df2664de096 69092 roughcopy_1.0-1_amd64.deb
+Files:
+ 0da17f72dc930f73e15a6f2a295de35e 19770 debug optional roughcopy-dbgsym_1.0-1_amd64.ddeb
+ 15df892625bf74fb952020773bc6327b 11171 utils optional roughcopy_1.0-1_amd64.buildinfo
+ 2c1022912057612f780043e018d00774 69092 utils optional roughcopy_1.0-1_amd64.deb

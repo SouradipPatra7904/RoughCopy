@@ -1,0 +1,13 @@
+Package: roughcopy-dbgsym
+Package-Type: ddeb
+Source: roughcopy
+Version: 1.0-1
+Auto-Built-Package: debug-symbols
+Architecture: amd64
+Maintainer: Souradip Patra <your@email.com>
+Installed-Size: 149
+Depends: roughcopy (= 1.0-1)
+Section: debug
+Priority: optional
+Description: debug symbols for roughcopy
+Build-Ids: fcda62740d1a44ca90557f39a9f8bc6e397b6ad0
