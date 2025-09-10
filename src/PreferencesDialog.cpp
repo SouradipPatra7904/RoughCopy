@@ -41,7 +41,7 @@ void PreferencesDialog::setupUI() {
     fontRow->addWidget(new QLabel("Size:"));
     fontSizeSpin = new QSpinBox(this);
     fontSizeSpin->setRange(8, 48);
-    fontSizeSpin->setValue(12);
+    fontSizeSpin->setValue(20);
     fontRow->addWidget(fontSizeSpin);
     main->addLayout(fontRow);
 
@@ -49,7 +49,7 @@ void PreferencesDialog::setupUI() {
     QHBoxLayout *themeRow = new QHBoxLayout();
     themeRow->addWidget(new QLabel("Theme:"));
     themeCombo = new QComboBox(this);
-    themeCombo->addItems({"Light", "Dark", "Night Sky"}); // Theme name placehoders
+    themeCombo->addItems({"Light", "Dark", "Starry Night"}); // Theme name placehoders
     themeRow->addWidget(themeCombo);
     main->addLayout(themeRow);
 
@@ -82,7 +82,7 @@ void PreferencesDialog::setupUI() {
 // Defaults
 // -------------------------
 void PreferencesDialog::loadDefaults() {
-    defaultFont = QFont("Courier New", 18);
+    defaultFont = QFont("JetBrains Mono Medium", 20);
     defaultTheme = "Light";
 }
 

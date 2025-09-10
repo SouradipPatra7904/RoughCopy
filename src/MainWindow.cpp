@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(m_textEditor);
 
     // Force startup theme = Light
-    QFont defFont("Courier New", 12);
+    QFont defFont("JetBrains Mono Medium", 20);
     QColor defFontColor("#000000");
     QColor defBgColor("#ffe4c4");
     QString defTheme = "Light";
@@ -88,10 +88,10 @@ void MainWindow::openManPage() {
     if (m_currentTheme == "Light") {
         helpView->setStyleSheet("QTextEdit { background: #ffe4c4; color: #000000; }");
     }
-    else if (m_currentTheme == "Dark (Classic)") {
+    else if (m_currentTheme == "Dark") {
         helpView->setStyleSheet("QTextEdit { background: #000000; color: #ffe4c4; }");
     }
-    else if (m_currentTheme == "Dark (Blue)") {
+    else if (m_currentTheme == "Starry Night") {
         helpView->setStyleSheet("QTextEdit { background: #001e42; color: #00f0ff; }");
     }
 

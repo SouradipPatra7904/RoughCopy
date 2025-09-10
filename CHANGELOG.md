@@ -12,8 +12,8 @@ This project follows [Semantic Versioning](https://semver.org/).
 - Preferences dialog with live preview.
 - Three built-in themes:
   - Light (bisque background, black text)
-  - Dark (Classic)
-  - Dark (Blue)
+  - Dark
+  - Night Sky
 - Customizable font family and font size.
 - Selection highlighting per theme.
 - `.deb` packaging for Debian/Ubuntu systems.

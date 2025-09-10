@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Name=RoughCopy
-Comment=Lightweight C++/Qt Code Editor
-Exec=RoughCopy
-Icon=RoughCopy
-Terminal=false
-Type=Application
-Categories=Utility;TextEditor;Development;

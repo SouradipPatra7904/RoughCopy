@@ -49,12 +49,12 @@ void TextEditor::applyPreferences(const QFont &font,
         dark = false;
     } 
     
-    else if (theme == "Dark (Classic)") {
+    else if (theme == "Dark") {
         appliedBgColor = QColor("#000000");
         appliedFontColor = QColor("#ffe4c4");
         dark = true;
     } 
-    else if (theme == "Dark (Blue)") {
+    else if (theme == "Starry Night") {
         appliedBgColor = QColor("#001e42");
         appliedFontColor = QColor("#00f0ff");
         dark = true;
@@ -74,7 +74,7 @@ void TextEditor::applyPreferences(const QFont &font,
 
 void TextEditor::revertPreferences() {
     // Defaults = Light theme (bisque / black)
-    QFont defFont("Courier New", 12);
+    QFont defFont("JetBrains Mono Medium", 20);
     QColor defFontColor("#000000");
     QColor defBgColor("#ffe4c4");
     bool dark = false;

@@ -6,7 +6,7 @@ CodeEditor::CodeEditor(QWidget *parent)
     : QPlainTextEdit(parent)
 {
     // default monospace font
-    QFont f("Courier New", 12);
+    QFont f("JetBrains Mono Medium", 20);
     setEditorFont(f);
 
     // default tab stop
@@ -35,10 +35,10 @@ void CodeEditor::setEditorColors(const QColor &fontColor, const QColor &bgColor,
     if (theme == "Light") {
         selBg = QColor("#FFB347");   // amber
         selText = Qt::black;
-    } else if (theme == "Dark (Classic)") {
+    } else if (theme == "Dark") {
         selBg = QColor("#3A6EA5");   // mid-blue
         selText = Qt::white;
-    } else if (theme == "Dark (Blue)") {
+    } else if (theme == "Starry Night") {
         selBg = QColor("#8000FF");   // bright violet/magenta
         selText = Qt::white;
     } else {
