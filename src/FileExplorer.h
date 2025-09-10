@@ -17,6 +17,7 @@ signals:
 private slots:
     void onFileClicked(const QModelIndex& index);
 
+
 private:
     QTreeView* m_treeView;
     QFileSystemModel* m_model;
