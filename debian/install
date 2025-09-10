@@ -1,0 +1,3 @@
+build/RoughCopy usr/bin
+resources/RoughCopy.desktop usr/share/applications
+resources/RoughCopy.png usr/share/icons/hicolor/256x256/apps

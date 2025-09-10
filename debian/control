@@ -1,0 +1,13 @@
+Source: roughcopy
+Section: utils
+Priority: optional
+Maintainer: Souradip Patra <your@email.com>
+Standards-Version: 4.6.0
+Build-Depends: debhelper (>= 11), qt6-base-dev
+
+Package: roughcopy
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: RoughCopy - a C++ & Qt6-based text editor
+ A lightweight C++/Qt text editor with theming support.
+ Useful for browsing and editing source code quickly.
