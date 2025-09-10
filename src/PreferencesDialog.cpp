@@ -93,7 +93,11 @@ void PreferencesDialog::loadCurrent() {
     currentFont = defaultFont;
     currentTheme = defaultTheme;
 
-    currentFontLabel->setText(QString("Current Font: %1").arg(currentFont.family()));
+    currentFontLabel->setText(
+        QString("Current Font: %1, %2pt")
+            .arg(currentFont.family())
+            .arg(currentFont.pointSize())
+    );
 
     fontCombo->setCurrentText(currentFont.family());
     fontSizeSpin->setValue(currentFont.pointSize());
@@ -138,8 +142,11 @@ void PreferencesDialog::onCancel() {
 
 void PreferencesDialog::previewChanges() {
     QString family = fontCombo->currentText();
-    currentFontLabel->setText(QString("Current Font: %1").arg(family));
+    int size = fontSizeSpin->value();
 
+    currentFontLabel->setText(
+        QString("Current Font: %1, %2pt").arg(family).arg(size)
+    );
     emit preferencesApplied(getSelectedFont(), Qt::black, Qt::white, getTheme());
 }
 
