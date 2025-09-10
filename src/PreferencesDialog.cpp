@@ -28,6 +28,12 @@ void PreferencesDialog::setupUI() {
     // Font family + size
     QHBoxLayout *fontRow = new QHBoxLayout();
     fontRow->addWidget(new QLabel("Font:"));
+
+    // Current font label (below dropdown)
+    currentFontLabel = new QLabel(this);
+    currentFontLabel->setText("Current Font: Courier New");  // default
+    main->addWidget(currentFontLabel);
+
     fontCombo = new QComboBox(this);
     fontCombo->addItems(QFontDatabase().families());
     fontRow->addWidget(fontCombo);
@@ -43,7 +49,7 @@ void PreferencesDialog::setupUI() {
     QHBoxLayout *themeRow = new QHBoxLayout();
     themeRow->addWidget(new QLabel("Theme:"));
     themeCombo = new QComboBox(this);
-    themeCombo->addItems({"Light", "Dark (Classic)", "Dark (Blue)"});
+    themeCombo->addItems({"Light", "Dark", "Night Sky"}); // Theme name placehoders
     themeRow->addWidget(themeCombo);
     main->addLayout(themeRow);
 
@@ -76,7 +82,7 @@ void PreferencesDialog::setupUI() {
 // Defaults
 // -------------------------
 void PreferencesDialog::loadDefaults() {
-    defaultFont = QFont("Courier New", 12);
+    defaultFont = QFont("Courier New", 18);
     defaultTheme = "Light";
 }
 
@@ -86,6 +92,8 @@ void PreferencesDialog::loadDefaults() {
 void PreferencesDialog::loadCurrent() {
     currentFont = defaultFont;
     currentTheme = defaultTheme;
+
+    currentFontLabel->setText(QString("Current Font: %1").arg(currentFont.family()));
 
     fontCombo->setCurrentText(currentFont.family());
     fontSizeSpin->setValue(currentFont.pointSize());
@@ -129,6 +137,9 @@ void PreferencesDialog::onCancel() {
 }
 
 void PreferencesDialog::previewChanges() {
+    QString family = fontCombo->currentText();
+    currentFontLabel->setText(QString("Current Font: %1").arg(family));
+
     emit preferencesApplied(getSelectedFont(), Qt::black, Qt::white, getTheme());
 }
 

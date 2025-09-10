@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QFont>
 #include <QString>
+#include <QLabel>
 
 class QComboBox;
 class QSpinBox;
@@ -43,6 +44,7 @@ private:
     QPushButton *okBtn;
     QPushButton *cancelBtn;
     QPushButton *restoreBtn;
+    QLabel *currentFontLabel;
 
     // State
     QFont currentFont;

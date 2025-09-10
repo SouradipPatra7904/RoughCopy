@@ -23,6 +23,14 @@ MainWindow::MainWindow(QWidget *parent)
     m_textEditor = new TextEditor(this);
     setCentralWidget(m_textEditor);
 
+    // Force startup theme = Light
+    QFont defFont("Courier New", 12);
+    QColor defFontColor("#000000");
+    QColor defBgColor("#ffe4c4");
+    QString defTheme = "Light";
+
+    m_textEditor->applyPreferences(defFont, defFontColor, defBgColor, defTheme);
+
     // File menu
     QMenu *fileMenu = menuBar()->addMenu("&File");
     QAction *newAct = new QAction("&New", this);
@@ -56,6 +64,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Default theme
     m_currentTheme = "Light";
+
+    
 }
 
 // --------------------------------
